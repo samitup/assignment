@@ -15,10 +15,25 @@ public class TrafficAnalyzer implements Analyzer {
 		this.trafficListeners = new HashMap<>();
 	}
 
-	public void printTrafficPerClient(Client client) {
-		int bytes = client.getPacket().stream().mapToInt(packet -> packet.bytes).sum();
-		System.out.println("Client: " + client.getName() + " has sent " + client.getPacketCount() + " packets and "
-				+ bytes + " bytes.");
+	public void printTrafficPerClientByTimeInterval(Client client, long startTime, long endTime) {
+		long totalBytesPerClient = 0;
+		long totalPacketCountPerClient = 0;
+		long dataRate = 0;
+		for (Packet packet : client.getPacket()) {
+
+			if ((System.currentTimeMillis() - packet.getTimeStamp()) >= startTime
+					&& (System.currentTimeMillis() - packet.getTimeStamp()) <= endTime) {
+				totalBytesPerClient += packet.getBytes();
+				totalPacketCountPerClient += client.getPacketCount();
+			}
+		}
+		// long bytes = client.getPacket().stream().mapToLong(packet ->
+		// packet.bytes).sum();
+		if ((endTime - startTime) > 0) {
+			dataRate = (totalBytesPerClient) / ((endTime - startTime) / 1000);
+		}
+		System.out.println("Client: " + client.getName() + " has sent " + totalPacketCountPerClient + " packets and "
+				+ dataRate + " bytes/s at given time interval.");
 	}
 
 	public void addClient(Client client) {
@@ -52,18 +67,24 @@ public class TrafficAnalyzer implements Analyzer {
 
 	}
 
-	public Map<Integer, Integer> getTotalTrafficByTimeInterval(long startTime, long endTime) {
-		Map<Integer, Integer> totalTraffic = new HashMap<>();
+	public Map<Integer, Long> getTotalTrafficByTimeInterval(long startTime, long endTime) {
+		Map<Integer, Long> totalTraffic = new HashMap<>();
 		int totalBytes = 0;
 		int totalPacketCount = 0;
+		long dataRate = 0;
 
-		for (Client client : trafficListeners.keySet()) {
+		for (Client client : clientList) {
 			for (Packet packet : client.getPacket()) {
-				if (packet.getTimeStamp() >= startTime && packet.getTimeStamp() <= endTime)
+				if ((System.currentTimeMillis() - packet.getTimeStamp()) >= startTime
+						&& (System.currentTimeMillis() - packet.getTimeStamp()) <= endTime) {
 					totalBytes += packet.getBytes();
-				totalPacketCount = client.getPacketCount();
-				totalTraffic.put(totalPacketCount, totalBytes);
+					totalPacketCount += client.getPacketCount();
+				}
 			}
+		}
+		if ((endTime - startTime) > 0) {
+			dataRate = totalBytes / (endTime - startTime);
+			totalTraffic.put(totalPacketCount, dataRate);
 		}
 		return totalTraffic;
 

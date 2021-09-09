@@ -1,10 +1,13 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class main {
 
-	public static void main(String args[]) {
+	public static void main(String args[]) throws InterruptedException {
 
 		Packet packet1 = new Packet(100, System.currentTimeMillis()); // Luodaan paketti, alustetaan tavuilla ja
 																		// aikaleimalla
@@ -17,7 +20,7 @@ public class main {
 		clientList.add(client1); // Lisätään asiakkaat listaan
 		clientList.add(client2);
 
-		TrafficAnalyzer trafficAnalyzer = new TrafficAnalyzer();
+		Analyzer trafficAnalyzer = new TrafficAnalyzer();
 		trafficAnalyzer.addClient(client1); // Lisätään asiakkaat trafficanalyzerille
 		trafficAnalyzer.addClient(client2);
 
@@ -26,20 +29,29 @@ public class main {
 		trafficAnalyzer.addListener(client2, new TestTrafficListener());
 		trafficAnalyzer.startUpdating(); // Aloitetaan tietoliikenteen päivitys kerran minuutissa
 
-		Map<Integer, Integer> getTotalTraffic = trafficAnalyzer.getTotalTrafficByTimeInterval(4000, 5000); // Hae
-																											// pakettien
-																											// ja
-																											// tavujen
-																											// kokonaismäärä
-																											// tietyllä
-																											// välillä
+		TrafficGenerator trafficGenerator = new TrafficGenerator(clientList); // Luodaan tietoliikenne generaattori
 
-		TrafficGenerator trafficGenerator = new TrafficGenerator(clientList); // Luodaan tietoliikenne
-																				// generaattori
 		trafficGenerator.start(); // Generoidaan liikennettä 1sec välein
+		Map<Integer, Long> getTotalTraffic = trafficAnalyzer.getTotalTrafficByTimeInterval(4000, 5000); // Hae
+																										// pakettien
+																										// ja
+																										// tavujen
+																										// kokonaismäärä
+																										// tietyllä
+																										// välillä
 
-		trafficAnalyzer.printTrafficPerClient(client1); // Haetaan pakettien ja tavujen määrä asiakkaalla
-		trafficAnalyzer.printTrafficPerClient(client2);
+		Runnable printDataPerClient = new Runnable() {
+			public void run() {
+				trafficAnalyzer.printTrafficPerClientByTimeInterval(client1, 1000, 2000); // Haetaan pakettien ja
+																							// tavujen määrä
+																							// asiakkaalla tietyllä aika
+																							// välillä
+				trafficAnalyzer.printTrafficPerClientByTimeInterval(client2, 1000, 10000);
+			}
+		};
+
+		ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
+		scheduler.scheduleAtFixedRate(printDataPerClient, 5000, 10000, TimeUnit.MILLISECONDS);
 
 	}
 

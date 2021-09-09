@@ -2,7 +2,7 @@ import java.util.Map;
 
 public interface Analyzer {
 
-	public void printTrafficPerClient(Client client);
+	public void printTrafficPerClientByTimeInterval(Client client, long startTime, long endTime);
 
 	public void addClient(Client client);
 
@@ -10,5 +10,5 @@ public interface Analyzer {
 
 	public void startUpdating();
 
-	public Map<Integer, Integer> getTotalTrafficByTimeInterval(long startTime, long endTime);
+	public Map<Integer, Long> getTotalTrafficByTimeInterval(long startTime, long endTime);
 }

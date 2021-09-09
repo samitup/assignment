@@ -27,7 +27,7 @@ public class Client {
 
 	public void addPacket(int bytes, long timeStamp) {
 		this.packets.add(new Packet(bytes, timeStamp));
-		this.packetCount = (int) (packetCount + Math.floor(Math.random()*100)+1);
+		this.packetCount = (int) (packetCount + Math.floor(Math.random() * 100) + 1);
 	}
 
 	public int getPacketCount() {
